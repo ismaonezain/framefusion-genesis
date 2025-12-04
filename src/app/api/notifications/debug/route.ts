@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
-const supabaseUrl = 'https://udungttagaihejqszcfk.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkdW5ndHRhZ2FpaGVqcXN6Y2ZrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzg2Nzg5MCwiZXhwIjoyMDc5NDQzODkwfQ.IRGW3VthNp6DXXt681jN9f6F2PC4_8Syzv_xKrUPPbA';
+const supabaseUrl = '';
+const supabaseServiceKey = '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const ADMIN_KEY = 'rahasia123';
+const ADMIN_KEY = '';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
