@@ -1,0 +1,74 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { monsterId, ownerFid } = await request.json();
+
+    if (!monsterId || !ownerFid) {
+      return NextResponse.json(
+        { success: false, error: 'Missing monsterId or ownerFid' },
+        { status: 400 }
+      );
+    }
+
+    // Check if monster exists and is owned by user
+    const { data: monster, error: monsterError } = await supabase
+      .from('monsters')
+      .select('*')
+      .eq('id', monsterId)
+      .eq('owner_fid', ownerFid)
+      .single();
+
+    if (monsterError || !monster) {
+      return NextResponse.json(
+        { success: false, error: 'Monster not found or not owned by user' },
+        { status: 404 }
+      );
+    }
+
+    // Check if already staked
+    const { data: existingStake } = await supabase
+      .from('staked_monsters')
+      .select('*')
+      .eq('monster_id', monsterId)
+      .single();
+
+    if (existingStake) {
+      return NextResponse.json(
+        { success: false, error: 'Monster already staked' },
+        { status: 400 }
+      );
+    }
+
+    // Stake the monster
+    const { data: staked, error: stakeError } = await supabase
+      .from('staked_monsters')
+      .insert({
+        monster_id: monsterId,
+        owner_fid: ownerFid,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (stakeError) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to stake monster', details: stakeError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      stake: staked,
+      message: 'Monster staked successfully! Can be unstaked after 1 day.',
+    });
+  } catch (error) {
+    console.error('Stake monster error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
