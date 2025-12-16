@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { monsterId, ownerFid } = await request.json();
+
+    if (!monsterId || !ownerFid) {
+      return NextResponse.json(
+        { success: false, error: 'Missing monsterId or ownerFid' },
+        { status: 400 }
+      );
+    }
+
+    // Get staked monster
+    const { data: staked, error: stakedError } = await supabase
+      .from('staked_monsters')
+      .select('*')
+      .eq('monster_id', monsterId)
+      .eq('owner_fid', ownerFid)
+      .eq('is_active', true)
+      .single();
+
+    if (stakedError || !staked) {
+      return NextResponse.json(
+        { success: false, error: 'Monster not found or not staked' },
+        { status: 404 }
+      );
+    }
+
+    // Check if 1 day has passed
+    const now = new Date();
+    const unstakeAvailable = new Date(staked.unstake_available_at);
+
+    if (now < unstakeAvailable) {
+      const remainingMs = unstakeAvailable.getTime() - now.getTime();
+      const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Must wait ${remainingHours} more hour(s) before unstaking`,
+          unstakeAvailableAt: unstakeAvailable.toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    // Unstake the monster
+    const { error: unstakeError } = await supabase
+      .from('staked_monsters')
+      .update({ is_active: false })
+      .eq('monster_id', monsterId);
+
+    if (unstakeError) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to unstake monster', details: unstakeError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Monster unstaked successfully!',
+      totalEarned: staked.total_earned,
+      totalBattles: staked.total_battles,
+    });
+  } catch (error) {
+    console.error('Unstake monster error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
