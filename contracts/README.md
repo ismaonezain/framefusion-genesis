@@ -1,3 +1,4 @@
+hahahaha
 # FrameFusion Genesis V2 - On-Chain Metadata Storage
 
 ## 🆕 What's New in V2?
