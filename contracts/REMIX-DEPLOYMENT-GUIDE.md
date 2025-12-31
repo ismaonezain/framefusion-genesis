@@ -1,3 +1,4 @@
+hahaha
 # 🎨 FrameFusion Genesis V2 - Remix Deployment Guide
 
 Panduan lengkap untuk deploy contract V2 menggunakan Remix IDE.
